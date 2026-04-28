@@ -1,0 +1,134 @@
+<!-- ===================== adm.html (ADMIN) ===================== -->
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<title>Admin - Publicar</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Lora:ital@0;1&display=swap" rel="stylesheet">
+<style>
+body{font-family:'Lora',serif;background:#0d1117;color:#fff;margin:0}
+header{background:#161b22;padding:15px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #21262d}
+header h1{font-family:'Playfair Display',serif;font-size:1.5rem;margin:0}
+.container{padding:20px;max-width:700px;margin:0 auto}
+.form-box{background:#161b22;border-radius:12px;padding:24px;border:1px solid #21262d;margin-bottom:30px}
+.form-box h2{font-family:'Playfair Display',serif;margin:0 0 18px 0;font-size:1.2rem;color:#f0e6d3}
+input,textarea{width:100%;margin:8px 0;padding:10px 14px;border-radius:8px;border:1px solid #30363d;background:#0d1117;color:#fff;font-family:'Lora',serif;font-size:0.95rem;box-sizing:border-box;outline:none;transition:border .2s}
+input:focus,textarea:focus{border-color:#58a6ff}
+textarea{min-height:120px;resize:vertical}
+input[type=file]{padding:8px;cursor:pointer}
+.btn-publicar{padding:11px 24px;background:#238636;color:#fff;border:none;border-radius:8px;font-family:'Lora',serif;font-size:1rem;cursor:pointer;width:100%;margin-top:8px;transition:background .2s}
+.btn-publicar:hover{background:#2ea043}
+.btn-voltar{padding:7px 16px;background:#21262d;color:#a8b4c0;border:none;border-radius:20px;font-family:'Lora',serif;font-size:0.85rem;cursor:pointer;text-decoration:none}
+.btn-voltar:hover{color:#fff}
+
+/* LISTA DE NOTÍCIAS */
+.noticias-titulo{font-family:'Playfair Display',serif;font-size:1.2rem;margin:0 0 15px 0;color:#f0e6d3}
+.noticia-item{background:#161b22;border:1px solid #21262d;border-radius:10px;padding:14px 16px;margin-bottom:12px;display:flex;align-items:center;gap:14px}
+.noticia-item img{width:70px;height:70px;object-fit:cover;border-radius:8px;flex-shrink:0}
+.noticia-info{flex:1;min-width:0}
+.noticia-info h3{font-family:'Playfair Display',serif;font-size:1rem;margin:0 0 4px 0;color:#f0e6d3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.noticia-info p{font-size:0.82rem;color:#a8b4c0;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.btn-excluir{background:#da3633;color:#fff;border:none;border-radius:6px;padding:7px 14px;cursor:pointer;font-size:0.85rem;font-family:'Lora',serif;flex-shrink:0;transition:background .2s}
+.btn-excluir:hover{background:#b62324}
+.sem-noticias{text-align:center;color:#a8b4c0;font-style:italic;padding:20px 0}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>⚙️ Painel ADM</h1>
+  <a href="index.html" class="btn-voltar">⬅ Voltar ao portal</a>
+</header>
+
+<div class="container">
+
+  <!-- FORMULÁRIO PUBLICAR -->
+  <div class="form-box">
+    <h2>📝 Publicar Nova Notícia</h2>
+    <input type="text" id="titulo" placeholder="Título da notícia">
+    <textarea id="conteudo" placeholder="Conteúdo da notícia"></textarea>
+    <input type="file" id="imagem" accept="image/*">
+    <button class="btn-publicar" onclick="publicar()">✅ Publicar Notícia</button>
+  </div>
+
+  <!-- LISTA DE NOTÍCIAS -->
+  <h2 class="noticias-titulo">🗂️ Notícias Publicadas</h2>
+  <div id="lista-noticias"></div>
+
+</div>
+
+<script>
+const client = supabase.createClient(
+  "https://gqwcgaahjqklgmrswytb.supabase.co",
+  "sb_publishable_bkCd5J8y1e4GszEv4S45yQ_YLZ48Wis"
+);
+
+let todasNoticias = [];
+
+async function publicar(){
+  const titulo = document.getElementById('titulo').value.trim();
+  const conteudo = document.getElementById('conteudo').value.trim();
+  const file = document.getElementById('imagem').files[0];
+
+  if(!titulo || !conteudo){ alert('Preencha o título e o conteúdo.'); return; }
+
+  let urlImagem = '';
+
+  if(file){
+    const nome = Date.now() + "_" + Math.random() + "_" + file.name;
+    const { data: uploadData, error: uploadError } = await client.storage.from('imagens').upload(nome, file);
+    if(uploadError){ alert("Erro no upload: " + uploadError.message); return; }
+    const { data } = client.storage.from('imagens').getPublicUrl(nome);
+    urlImagem = data.publicUrl;
+  }
+
+  const { error } = await client.from('noticias').insert([{ titulo, conteudo, imagem: urlImagem }]);
+
+  if(error){
+    alert("Erro ao salvar: " + error.message);
+  } else {
+    alert("Notícia publicada!");
+    document.getElementById('titulo').value = '';
+    document.getElementById('conteudo').value = '';
+    document.getElementById('imagem').value = '';
+    carregarNoticias();
+  }
+}
+
+async function excluir(id){
+  if(!confirm('Tem certeza que deseja excluir esta notícia?')) return;
+  const { error } = await client.from('noticias').delete().eq('id', id);
+  if(error){ alert('Erro ao excluir: ' + error.message); return; }
+  todasNoticias = todasNoticias.filter(n => n.id !== id);
+  renderizar();
+}
+
+function renderizar(){
+  const div = document.getElementById('lista-noticias');
+  if(todasNoticias.length === 0){
+    div.innerHTML = '<p class="sem-noticias">Nenhuma notícia publicada ainda.</p>';
+    return;
+  }
+  div.innerHTML = todasNoticias.map(n => `
+    <div class="noticia-item">
+      ${n.imagem ? `<img src="${n.imagem}" onerror="this.style.display='none'">` : ''}
+      <div class="noticia-info">
+        <h3>${n.titulo}</h3>
+        <p>${n.conteudo}</p>
+      </div>
+      <button class="btn-excluir" onclick="excluir(${n.id})">🗑️ Excluir</button>
+    </div>
+  `).join('');
+}
+
+async function carregarNoticias(){
+  const { data } = await client.from('noticias').select('*').order('id',{ascending:false});
+  todasNoticias = data || [];
+  renderizar();
+}
+
+carregarNoticias();
+</script>
+</body>
+</html>
