@@ -5,100 +5,154 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Portal de Notícias</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Lora:wght@400;600&display=swap" rel="stylesheet">
 <style>
-body{font-family:Arial;background:#0d1117;color:#fff;margin:0}
-header{padding:15px;background:#161b22;display:flex;justify-content:space-between}
-button{padding:8px 12px;cursor:pointer}
-.container{padding:20px}
-.card{background:#161b22;margin-bottom:10px;padding:10px;border-radius:8px}
+:root{
+  --bg:#0d1117;
+  --surface:#161b22;
+  --border:#21262d;
+  --text:#e6edf3;
+  --muted:#8b949e;
+  --accent:#58a6ff;
+  --green:#238636;
+  --red:#da3633;
+  --gold:#f0e6d3;
+}
+body{margin:0;font-family:'Lora';background:var(--bg);color:var(--text)}
+header{background:var(--surface);padding:15px;display:flex;justify-content:space-between;align-items:center}
+.header-logo{font-family:'Playfair Display';color:var(--gold)}
+.btn{padding:6px 12px;border:none;border-radius:20px;cursor:pointer}
+.btn-login{background:var(--green);color:#fff}
+.btn-logout{background:var(--border);color:var(--muted)}
+.btn-adm{background:var(--accent);color:#000}
+.container{max-width:800px;margin:auto;padding:20px}
+.card{background:var(--surface);padding:15px;border-radius:10px;margin-bottom:10px;display:flex;gap:10px}
+.card img{width:100px;height:100px;object-fit:cover;border-radius:8px}
+.card h3{color:var(--gold);margin:0}
+.modal{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--surface);padding:20px;border-radius:10px;display:none}
+.modal input{width:100%;margin:5px 0;padding:8px}
+.toast{position:fixed;bottom:20px;right:20px;background:var(--green);padding:10px;border-radius:8px;display:none}
 </style>
 </head>
 <body>
 
 <header>
-  <h2>📰 Portal</h2>
+  <h2 class="header-logo">📰 Portal</h2>
   <div id="header"></div>
 </header>
 
 <div class="container" id="noticias"></div>
 
-<!-- LOGIN -->
-<div id="loginBox" style="display:none;position:fixed;top:20%;left:50%;transform:translateX(-50%);background:#161b22;padding:20px;border-radius:10px">
-  <h3>Login</h3>
-  <input id="email" placeholder="email"><br><br>
-  <input id="senha" type="password" placeholder="senha"><br><br>
-  <button onclick="login()">Entrar</button>
-  <button onclick="fecharLogin()">Cancelar</button>
+<div class="modal" id="modal">
+  <h3 id="tituloModal">Login</h3>
+  <input id="nome" placeholder="Nome" style="display:none">
+  <input id="email" placeholder="Email">
+  <input id="senha" type="password" placeholder="Senha">
+  <button onclick="enviar()">Confirmar</button>
+  <button onclick="fecharModal()">Cancelar</button>
   <p id="erro" style="color:red"></p>
+  <p onclick="toggleModo()" style="cursor:pointer;color:var(--accent)">Alternar modo</p>
 </div>
+
+<div class="toast" id="toast"></div>
 
 <script>
 const { createClient } = supabase;
-const client = createClient(
-  "https://rmmpzrqzizqrcmpvhxvl.supabase.co",
-  "sb_publishable_vvxAS_b3_iU_Vp4UfoeOLQ_rQBAm1yM"
-);
+const client = createClient("https://rmmpzrqzizqrcmpvhxvl.supabase.co","sb_publishable_vvxAS_b3_iU_Vp4UfoeOLQ_rQBAm1yM");
 
-let sessaoAtual = null;
+let sessaoAtual=null;
+let cadastro=false;
 
-function abrirLogin(){document.getElementById('loginBox').style.display='block'}
-function fecharLogin(){document.getElementById('loginBox').style.display='none'}
+function abrirModal(){document.getElementById('modal').style.display='block'}
+function fecharModal(){document.getElementById('modal').style.display='none'}
 
-async function login(){
-  const email = document.getElementById('email').value;
-  const senha = document.getElementById('senha').value;
-  const erro = document.getElementById('erro');
+function toggleModo(){
+  cadastro=!cadastro;
+  document.getElementById('tituloModal').textContent=cadastro?'Cadastro':'Login';
+  document.getElementById('nome').style.display=cadastro?'block':'none';
+}
 
-  const { error } = await client.auth.signInWithPassword({ email, password: senha });
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.innerText=msg;
+  t.style.display='block';
+  setTimeout(()=>t.style.display='none',3000);
+}
 
-  if(error){ erro.textContent = error.message; return; }
+async function enviar(){
+  const email=emailEl.value;
+  const senha=senhaEl.value;
+  const erro=document.getElementById('erro');
 
-  const { data: { session } } = await client.auth.getSession();
-  sessaoAtual = session;
+  if(cadastro){
+    const nome=document.getElementById('nome').value;
+    const { data, error } = await client.auth.signUp({email,password:senha,options:{data:{nome}}});
+    if(error){erro.textContent=error.message;return}
+    if(data.user){
+      await client.from('perfis').insert([{id:data.user.id,email:data.user.email,is_admin:false}]);
+    }
+    toast('Cadastro realizado');
+    toggleModo();
+  }else{
+    const { error } = await client.auth.signInWithPassword({email,password:senha});
+    if(error){erro.textContent=error.message;return}
+    toast('Login realizado');
+  }
+  fecharModal();
+}
 
-  atualizarHeader();
-  fecharLogin();
+const emailEl=document.getElementById('email');
+const senhaEl=document.getElementById('senha');
+
+async function atualizarHeader(){
+  const h=document.getElementById('header');
+  if(!sessaoAtual){
+    h.innerHTML=`<button class='btn btn-login' onclick='abrirModal()'>Entrar</button>`;
+    return;
+  }
+
+  const nome=sessaoAtual.user.user_metadata?.nome||sessaoAtual.user.email;
+
+  const { data } = await client.from('perfis').select('is_admin').eq('id',sessaoAtual.user.id).single();
+
+  h.innerHTML=`
+    <span>Olá <b>${nome}</b></span>
+    ${data?.is_admin?'<a href="adm.html"><button class="btn btn-adm">ADM</button></a>':''}
+    <button class="btn btn-logout" onclick="logout()">Sair</button>
+  `;
 }
 
 async function logout(){
   await client.auth.signOut();
-}
-
-async function atualizarHeader(){
-  const header = document.getElementById('header');
-
-  if(!sessaoAtual){
-    header.innerHTML = `<button onclick="abrirLogin()">Entrar</button>`;
-    return;
-  }
-
-  const { data } = await client.from('perfis').select('is_admin').eq('id', sessaoAtual.user.id).single();
-
-  header.innerHTML = `
-    <span>${sessaoAtual.user.email}</span>
-    ${data?.is_admin ? '<a href="adm.html"><button>ADM</button></a>' : ''}
-    <button onclick="logout()">Sair</button>
-  `;
+  toast('Saiu da conta');
 }
 
 async function carregarNoticias(){
-  const { data } = await client.from('noticias').select('*');
-  const div = document.getElementById('noticias');
-  div.innerHTML = '';
+  const { data } = await client.from('noticias').select('*').order('id',{ascending:false});
+  const div=document.getElementById('noticias');
+  div.innerHTML='';
 
   data.forEach(n=>{
-    div.innerHTML += `<div class="card"><h3>${n.titulo}</h3><p>${n.conteudo}</p></div>`;
+    div.innerHTML+=`
+      <div class="card">
+        ${n.imagem?`<img src="${n.imagem}">`:''}
+        <div>
+          <h3>${n.titulo}</h3>
+          <p>${n.conteudo}</p>
+        </div>
+      </div>
+    `;
   });
 }
 
-client.auth.onAuthStateChange((event, session) => {
-  sessaoAtual = session;
+client.auth.onAuthStateChange((e,session)=>{
+  sessaoAtual=session;
   atualizarHeader();
 });
 
-(async () => {
-  const { data: { session } } = await client.auth.getSession();
-  sessaoAtual = session;
+(async()=>{
+  const { data:{session} } = await client.auth.getSession();
+  sessaoAtual=session;
   atualizarHeader();
   carregarNoticias();
 })();
