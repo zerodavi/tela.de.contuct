@@ -5,158 +5,856 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Portal de Notícias</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Lora:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&family=Josefin+Sans:wght@300;400;600&display=swap" rel="stylesheet">
 <style>
-:root{
-  --bg:#0d1117;
-  --surface:#161b22;
-  --border:#21262d;
-  --text:#e6edf3;
-  --muted:#8b949e;
-  --accent:#58a6ff;
-  --green:#238636;
-  --red:#da3633;
-  --gold:#f0e6d3;
+:root {
+  --bg: #080b0f;
+  --surface: #0e1318;
+  --surface2: #131920;
+  --border: #1e2730;
+  --border2: #28333d;
+  --text: #dce8f0;
+  --muted: #6a7f8e;
+  --muted2: #4a5d6b;
+  --accent: #c8a96e;
+  --accent2: #e2c898;
+  --accent-dim: rgba(200,169,110,0.12);
+  --red: #c0392b;
+  --green: #1a6b3a;
+  --green2: #21854a;
+  --white: #f5f0e8;
 }
-body{margin:0;font-family:'Lora';background:var(--bg);color:var(--text)}
-header{background:var(--surface);padding:15px;display:flex;justify-content:space-between;align-items:center}
-.header-logo{font-family:'Playfair Display';color:var(--gold)}
-.btn{padding:6px 12px;border:none;border-radius:20px;cursor:pointer}
-.btn-login{background:var(--green);color:#fff}
-.btn-logout{background:var(--border);color:var(--muted)}
-.btn-adm{background:var(--accent);color:#000}
-.container{max-width:800px;margin:auto;padding:20px}
-.card{background:var(--surface);padding:15px;border-radius:10px;margin-bottom:10px;display:flex;gap:10px}
-.card img{width:100px;height:100px;object-fit:cover;border-radius:8px}
-.card h3{color:var(--gold);margin:0}
-.modal{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--surface);padding:20px;border-radius:10px;display:none}
-.modal input{width:100%;margin:5px 0;padding:8px}
-.toast{position:fixed;bottom:20px;right:20px;background:var(--green);padding:10px;border-radius:8px;display:none}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Cormorant Garamond', serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── BACKGROUND TEXTURE ── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    radial-gradient(ellipse 80% 50% at 20% -10%, rgba(200,169,110,0.06) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 80% 110%, rgba(200,169,110,0.04) 0%, transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── TOP BAR ── */
+.topbar {
+  border-bottom: 1px solid var(--border);
+  padding: 6px 40px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: 'Josefin Sans', sans-serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+  text-transform: uppercase;
+  position: relative;
+  z-index: 10;
+}
+#data-hora { color: var(--accent); }
+
+/* ── HEADER ── */
+header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(8,11,15,0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+}
+
+.header-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 30px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 64px;
+}
+
+.logo {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  text-decoration: none;
+}
+.logo-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.7rem;
+  font-weight: 700;
+  color: var(--accent2);
+  letter-spacing: 0.04em;
+  line-height: 1;
+}
+.logo-sub {
+  font-family: 'Josefin Sans', sans-serif;
+  font-size: 0.55rem;
+  letter-spacing: 0.3em;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+#header-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.user-greeting {
+  font-family: 'Josefin Sans', sans-serif;
+  font-size: 0.78rem;
+  color: var(--muted);
+  letter-spacing: 0.05em;
+}
+.user-greeting b { color: var(--accent2); font-weight: 600; }
+
+.btn {
+  font-family: 'Josefin Sans', sans-serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border: none;
+  border-radius: 2px;
+  cursor: pointer;
+  padding: 8px 18px;
+  transition: all 0.25s;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.btn-login {
+  background: var(--accent);
+  color: #080b0f;
+  font-weight: 600;
+}
+.btn-login:hover { background: var(--accent2); transform: translateY(-1px); }
+
+.btn-logout {
+  background: transparent;
+  border: 1px solid var(--border2);
+  color: var(--muted);
+}
+.btn-logout:hover { border-color: var(--muted); color: var(--text); }
+
+.btn-adm {
+  background: transparent;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+}
+.btn-adm:hover { background: var(--accent-dim); }
+
+/* ── HERO SECTION ── */
+.hero {
+  text-align: center;
+  padding: 60px 20px 40px;
+  position: relative;
+  z-index: 1;
+  max-width: 700px;
+  margin: 0 auto;
+}
+.hero-eyebrow {
+  font-family: 'Josefin Sans', sans-serif;
+  font-size: 0.68rem;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 14px;
+}
+.hero h1 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(2.4rem, 5vw, 3.8rem);
+  font-weight: 300;
+  color: var(--white);
+  line-height: 1.15;
+  margin-bottom: 12px;
+  letter-spacing: -0.01em;
+}
+.hero h1 em { font-style: italic; color: var(--accent2); }
+.hero-divider {
+  width: 50px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  margin: 20px auto;
+}
+
+/* ── LAYOUT ── */
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 30px 60px;
+  position: relative;
+  z-index: 1;
+}
+
+/* ── SECTION HEADER ── */
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 28px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+}
+.section-label {
+  font-family: 'Josefin Sans', sans-serif;
+  font-size: 0.68rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.section-line {
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+.section-count {
+  font-family: 'Josefin Sans', sans-serif;
+  font-size: 0.65rem;
+  color: var(--muted2);
+  letter-spacing: 0.1em;
+}
+
+/* ── NEWS GRID ── */
+#noticias {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+/* DESTAQUE — primeiro item ocupa linha inteira */
+#noticias .card:first-child {
+  grid-column: 1 / -1;
+  flex-direction: row;
+}
+#noticias .card:first-child .card-img {
+  width: 280px;
+  height: 200px;
+  flex-shrink: 0;
+}
+#noticias .card:first-child .card-body {
+  padding: 28px 30px;
+}
+#noticias .card:first-child .card-title {
+  font-size: 1.65rem;
+}
+
+/* CARD PADRÃO */
+.card {
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: background 0.2s;
+  cursor: pointer;
+  position: relative;
+}
+.card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--accent-dim);
+  opacity: 0;
+  transition: opacity 0.25s;
+  pointer-events: none;
+}
+.card:hover { background: var(--surface2); }
+.card:hover::after { opacity: 1; }
+
+.card-img {
+  width: 100%;
+  height: 175px;
+  object-fit: cover;
+  display: block;
+  filter: brightness(0.92) saturate(0.85);
+  transition: filter 0.3s;
+}
+.card:hover .card-img { filter: brightness(1) saturate(0.95); }
+
+.card-img-placeholder {
+  width: 100%;
+  height: 175px;
+  background: linear-gradient(135deg, var(--surface2) 0%, var(--border) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted2);
+  font-size: 2rem;
+}
+
+.card-body {
+  padding: 20px 22px 22px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.card-category {
+  font-family: 'Josefin Sans', sans-serif;
+  font-size: 0.6rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.card-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--white);
+  line-height: 1.3;
+  letter-spacing: 0.01em;
+}
+
+.card-text {
+  font-size: 0.9rem;
+  font-weight: 300;
+  color: var(--muted);
+  line-height: 1.7;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.card-footer {
+  margin-top: auto;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.card-date {
+  font-family: 'Josefin Sans', sans-serif;
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  color: var(--muted2);
+}
+.card-read {
+  font-family: 'Josefin Sans', sans-serif;
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.card:hover .card-read { opacity: 1; }
+
+/* ── EMPTY STATE ── */
+.empty-state {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 70px 20px;
+  background: var(--surface);
+}
+.empty-icon { font-size: 2.5rem; margin-bottom: 16px; opacity: 0.4; }
+.empty-state h3 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.4rem;
+  font-weight: 300;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+.empty-state p {
+  font-size: 0.85rem;
+  color: var(--muted2);
+}
+
+/* ── LOADING ── */
+.loading-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.skeleton-card {
+  background: var(--surface);
+  height: 260px;
+  position: relative;
+  overflow: hidden;
+}
+.skeleton-card:first-child { grid-column: 1 / -1; height: 200px; }
+.skeleton-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.04) 50%, transparent 100%);
+  animation: shimmer 1.6s infinite;
+}
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* ── MODAL ── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(8,11,15,0.85);
+  backdrop-filter: blur(8px);
+  z-index: 200;
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 6px;
+  padding: 40px 36px;
+  width: 100%;
+  max-width: 400px;
+  position: relative;
+  animation: slideUp 0.3s ease;
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.modal-header {
+  margin-bottom: 28px;
+}
+.modal-eyebrow {
+  font-family: 'Josefin Sans', sans-serif;
+  font-size: 0.65rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 6px;
+}
+.modal-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.8rem;
+  font-weight: 600;
+  color: var(--white);
+}
+
+.field {
+  margin-bottom: 14px;
+}
+.field label {
+  display: block;
+  font-family: 'Josefin Sans', sans-serif;
+  font-size: 0.65rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+.field input {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--border2);
+  border-radius: 3px;
+  padding: 11px 14px;
+  color: var(--text);
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.field input:focus { border-color: var(--accent); }
+
+.btn-submit {
+  width: 100%;
+  background: var(--accent);
+  color: #080b0f;
+  font-family: 'Josefin Sans', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  border: none;
+  border-radius: 3px;
+  padding: 13px;
+  cursor: pointer;
+  margin-top: 6px;
+  transition: background 0.2s, transform 0.15s;
+}
+.btn-submit:hover { background: var(--accent2); transform: translateY(-1px); }
+
+.modal-toggle {
+  text-align: center;
+  margin-top: 16px;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+.modal-toggle span {
+  color: var(--accent);
+  cursor: pointer;
+  margin-left: 4px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.modal-toggle span:hover { color: var(--accent2); }
+
+.modal-close {
+  position: absolute;
+  top: 14px; right: 16px;
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 1.2rem;
+  cursor: pointer;
+  line-height: 1;
+  padding: 4px 6px;
+  border-radius: 2px;
+  transition: color 0.2s;
+}
+.modal-close:hover { color: var(--text); }
+
+#modal-erro {
+  font-family: 'Josefin Sans', sans-serif;
+  font-size: 0.75rem;
+  color: #e87070;
+  margin-top: 10px;
+  min-height: 16px;
+  letter-spacing: 0.05em;
+}
+
+/* ── TOAST ── */
+.toast {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  z-index: 300;
+  background: var(--surface2);
+  border: 1px solid var(--accent);
+  border-left: 3px solid var(--accent);
+  color: var(--accent2);
+  font-family: 'Josefin Sans', sans-serif;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  padding: 12px 20px;
+  border-radius: 3px;
+  display: none;
+  animation: fadeInUp 0.3s ease;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+}
+.toast.show { display: block; }
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── FOOTER ── */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 24px 40px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+}
+.footer-logo {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1rem;
+  color: var(--accent);
+  letter-spacing: 0.05em;
+}
+.footer-copy {
+  font-family: 'Josefin Sans', sans-serif;
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  color: var(--muted2);
+  text-transform: uppercase;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 680px) {
+  .topbar { display: none; }
+  .header-inner { padding: 0 16px; }
+  .container { padding: 0 16px 50px; }
+  .hero { padding: 40px 16px 30px; }
+  #noticias { grid-template-columns: 1fr; }
+  #noticias .card:first-child { grid-column: 1; flex-direction: column; }
+  #noticias .card:first-child .card-img { width: 100%; }
+  .loading-grid { grid-template-columns: 1fr; }
+  .loading-grid .skeleton-card:first-child { grid-column: 1; }
+  footer { flex-direction: column; gap: 10px; text-align: center; }
+}
 </style>
 </head>
 <body>
 
-<header>
-  <h2 class="header-logo">📰 Portal</h2>
-  <div id="header"></div>
-</header>
-
-<div class="container" id="noticias"></div>
-
-<div class="modal" id="modal">
-  <h3 id="tituloModal">Login</h3>
-  <input id="nome" placeholder="Nome" style="display:none">
-  <input id="email" placeholder="Email">
-  <input id="senha" type="password" placeholder="Senha">
-  <button onclick="enviar()">Confirmar</button>
-  <button onclick="fecharModal()">Cancelar</button>
-  <p id="erro" style="color:red"></p>
-  <p onclick="toggleModo()" style="cursor:pointer;color:var(--accent)">Alternar modo</p>
+<!-- TOP BAR -->
+<div class="topbar">
+  <span id="data-hora"></span>
+  <span>Informação com credibilidade</span>
 </div>
 
+<!-- HEADER -->
+<header>
+  <div class="header-inner">
+    <a class="logo" href="#">
+      <span class="logo-title">📰 O Portal</span>
+      <span class="logo-sub">Notícias &amp; Atualidades</span>
+    </a>
+    <div id="header-user"></div>
+  </div>
+</header>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-eyebrow">Portal de Notícias</div>
+  <h1>As notícias que <em>importam</em></h1>
+  <div class="hero-divider"></div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="container">
+  <div class="section-header">
+    <span class="section-label">Últimas Notícias</span>
+    <div class="section-line"></div>
+    <span class="section-count" id="count-label">carregando...</span>
+  </div>
+
+  <!-- Loading skeleton -->
+  <div class="loading-grid" id="loading-state">
+    <div class="skeleton-card"></div>
+    <div class="skeleton-card"></div>
+    <div class="skeleton-card"></div>
+  </div>
+
+  <div id="noticias" style="display:none"></div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <span class="footer-logo">📰 O Portal</span>
+  <span class="footer-copy">© 2025 · Todos os direitos reservados</span>
+</footer>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal" role="dialog" aria-modal="true">
+    <button class="modal-close" onclick="fecharModal()" aria-label="Fechar">✕</button>
+    <div class="modal-header">
+      <div class="modal-eyebrow" id="modal-eyebrow">Acesso à conta</div>
+      <div class="modal-title" id="modal-title">Entrar</div>
+    </div>
+
+    <div class="field" id="field-nome" style="display:none">
+      <label>Seu nome</label>
+      <input type="text" id="nome" placeholder="Como quer ser chamado?">
+    </div>
+    <div class="field">
+      <label>E-mail</label>
+      <input type="email" id="email" placeholder="seu@email.com">
+    </div>
+    <div class="field">
+      <label>Senha</label>
+      <input type="password" id="senha" placeholder="••••••••">
+    </div>
+
+    <div id="modal-erro"></div>
+
+    <button class="btn-submit" onclick="enviar()">Confirmar</button>
+
+    <div class="modal-toggle">
+      <span id="toggle-label">Não tem conta?</span>
+      <span onclick="toggleModo()">Cadastre-se</span>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
 <div class="toast" id="toast"></div>
 
 <script>
 const { createClient } = supabase;
-const client = createClient("https://rmmpzrqzizqrcmpvhxvl.supabase.co","sb_publishable_vvxAS_b3_iU_Vp4UfoeOLQ_rQBAm1yM");
+const client = createClient(
+  "https://rmmpzrqzizqrcmpvhxvl.supabase.co",
+  "sb_publishable_vvxAS_b3_iU_Vp4UfoeOLQ_rQBAm1yM"
+);
 
-let sessaoAtual=null;
-let cadastro=false;
+let sessaoAtual = null;
+let cadastro = false;
 
-function abrirModal(){document.getElementById('modal').style.display='block'}
-function fecharModal(){document.getElementById('modal').style.display='none'}
+/* ── DATA/HORA ── */
+function atualizarRelogio() {
+  const agora = new Date();
+  const opts = { weekday:'long', day:'numeric', month:'long', year:'numeric' };
+  document.getElementById('data-hora').textContent =
+    agora.toLocaleDateString('pt-BR', opts) + ' · ' +
+    agora.toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' });
+}
+atualizarRelogio();
+setInterval(atualizarRelogio, 60000);
 
-function toggleModo(){
-  cadastro=!cadastro;
-  document.getElementById('tituloModal').textContent=cadastro?'Cadastro':'Login';
-  document.getElementById('nome').style.display=cadastro?'block':'none';
+/* ── MODAL ── */
+function abrirModal() {
+  document.getElementById('modal-overlay').classList.add('open');
+  document.getElementById('email').focus();
+}
+function fecharModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+  document.getElementById('modal-erro').textContent = '';
+}
+document.getElementById('modal-overlay').addEventListener('click', e => {
+  if (e.target === e.currentTarget) fecharModal();
+});
+
+function toggleModo() {
+  cadastro = !cadastro;
+  document.getElementById('modal-title').textContent = cadastro ? 'Criar conta' : 'Entrar';
+  document.getElementById('modal-eyebrow').textContent = cadastro ? 'Novo cadastro' : 'Acesso à conta';
+  document.getElementById('field-nome').style.display = cadastro ? 'block' : 'none';
+  document.getElementById('toggle-label').textContent = cadastro ? 'Já tem conta?' : 'Não tem conta?';
+  document.querySelector('.modal-toggle span:last-child').textContent = cadastro ? 'Faça login' : 'Cadastre-se';
+  document.getElementById('modal-erro').textContent = '';
 }
 
-function toast(msg){
-  const t=document.getElementById('toast');
-  t.innerText=msg;
-  t.style.display='block';
-  setTimeout(()=>t.style.display='none',3000);
+function toast(msg, err = false) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.style.borderColor = err ? '#c0392b' : 'var(--accent)';
+  el.style.color = err ? '#e87070' : 'var(--accent2)';
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 3200);
 }
 
-async function enviar(){
-  const email=emailEl.value;
-  const senha=senhaEl.value;
-  const erro=document.getElementById('erro');
+async function enviar() {
+  const email = document.getElementById('email').value.trim();
+  const senha = document.getElementById('senha').value;
+  const erroEl = document.getElementById('modal-erro');
+  erroEl.textContent = '';
 
-  if(cadastro){
-    const nome=document.getElementById('nome').value;
-    const { data, error } = await client.auth.signUp({email,password:senha,options:{data:{nome}}});
-    if(error){erro.textContent=error.message;return}
-    if(data.user){
-      await client.from('perfis').insert([{id:data.user.id,email:data.user.email,is_admin:false}]);
+  if (!email || !senha) { erroEl.textContent = 'Preencha todos os campos.'; return; }
+
+  if (cadastro) {
+    const nome = document.getElementById('nome').value.trim();
+    const { data, error } = await client.auth.signUp({ email, password: senha, options: { data: { nome } } });
+    if (error) { erroEl.textContent = error.message; return; }
+    if (data.user) {
+      await client.from('perfis').insert([{ id: data.user.id, email: data.user.email, is_admin: false }]);
     }
-    toast('Cadastro realizado');
-    toggleModo();
-  }else{
-    const { error } = await client.auth.signInWithPassword({email,password:senha});
-    if(error){erro.textContent=error.message;return}
-    toast('Login realizado');
+    toast('✓ Cadastro realizado com sucesso!');
+    fecharModal();
+    if (!cadastro) toggleModo();
+  } else {
+    const { error } = await client.auth.signInWithPassword({ email, password: senha });
+    if (error) { erroEl.textContent = error.message; return; }
+    toast('✓ Login realizado!');
+    fecharModal();
   }
-  fecharModal();
 }
 
-const emailEl=document.getElementById('email');
-const senhaEl=document.getElementById('senha');
+/* ── HEADER ── */
+async function atualizarHeader() {
+  const h = document.getElementById('header-user');
 
-async function atualizarHeader(){
-  const h=document.getElementById('header');
-  if(!sessaoAtual){
-    h.innerHTML=`<button class='btn btn-login' onclick='abrirModal()'>Entrar</button>`;
+  if (!sessaoAtual) {
+    h.innerHTML = `<button class="btn btn-login" onclick="abrirModal()">Entrar</button>`;
     return;
   }
 
-  const nome=sessaoAtual.user.user_metadata?.nome||sessaoAtual.user.email;
+  const nome = sessaoAtual.user.user_metadata?.nome || sessaoAtual.user.email;
+  const { data } = await client.from('perfis').select('is_admin').eq('id', sessaoAtual.user.id).single();
 
-  const { data } = await client.from('perfis').select('is_admin').eq('id',sessaoAtual.user.id).single();
-
-  h.innerHTML=`
-    <span>Olá <b>${nome}</b></span>
-    ${data?.is_admin?'<a href="adm.html"><button class="btn btn-adm">ADM</button></a>':''}
+  h.innerHTML = `
+    <span class="user-greeting">Olá, <b>${nome}</b></span>
+    ${data?.is_admin ? `<a href="adm.html" style="text-decoration:none"><button class="btn btn-adm">⚙ ADM</button></a>` : ''}
     <button class="btn btn-logout" onclick="logout()">Sair</button>
   `;
 }
 
-async function logout(){
+async function logout() {
   await client.auth.signOut();
-  toast('Saiu da conta');
+  toast('Você saiu da conta.');
 }
 
-async function carregarNoticias(){
-  const { data } = await client.from('noticias').select('*').order('id',{ascending:false});
-  const div=document.getElementById('noticias');
-  div.innerHTML='';
+/* ── NOTÍCIAS ── */
+function formatarData(str) {
+  if (!str) return '';
+  const d = new Date(str);
+  return d.toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' });
+}
 
-  data.forEach(n=>{
-    div.innerHTML+=`
-      <div class="card">
-        ${n.imagem?`<img src="${n.imagem}">`:''}
-        <div>
-          <h3>${n.titulo}</h3>
-          <p>${n.conteudo}</p>
+async function carregarNoticias() {
+  const { data, error } = await client.from('noticias').select('*').order('id', { ascending: false });
+
+  document.getElementById('loading-state').style.display = 'none';
+  const grid = document.getElementById('noticias');
+  grid.style.display = 'grid';
+
+  if (error || !data || data.length === 0) {
+    document.getElementById('count-label').textContent = '0 publicações';
+    grid.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">📭</div>
+        <h3>Nenhuma notícia publicada</h3>
+        <p>Em breve novas publicações aparecerão aqui.</p>
+      </div>`;
+    return;
+  }
+
+  document.getElementById('count-label').textContent = `${data.length} publicaç${data.length === 1 ? 'ão' : 'ões'}`;
+
+  grid.innerHTML = data.map(n => `
+    <div class="card">
+      ${n.imagem
+        ? `<img class="card-img" src="${n.imagem}" alt="${n.titulo}" onerror="this.outerHTML='<div class=card-img-placeholder>📰</div>'">`
+        : `<div class="card-img-placeholder">📰</div>`}
+      <div class="card-body">
+        <span class="card-category">Notícia</span>
+        <h3 class="card-title">${n.titulo}</h3>
+        <p class="card-text">${n.conteudo}</p>
+        <div class="card-footer">
+          <span class="card-date">${formatarData(n.created_at) || 'Publicado recentemente'}</span>
+          <span class="card-read">Ler →</span>
         </div>
       </div>
-    `;
-  });
+    </div>
+  `).join('');
 }
 
-client.auth.onAuthStateChange((e,session)=>{
-  sessaoAtual=session;
+/* ── AUTH STATE ── */
+client.auth.onAuthStateChange((event, session) => {
+  sessaoAtual = session;
   atualizarHeader();
 });
 
-(async()=>{
-  const { data:{session} } = await client.auth.getSession();
-  sessaoAtual=session;
+(async () => {
+  const { data: { session } } = await client.auth.getSession();
+  sessaoAtual = session;
   atualizarHeader();
   carregarNoticias();
 })();
 </script>
-
 </body>
 </html>
