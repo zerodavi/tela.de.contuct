@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Portal de Notícias</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0d1117;
+  --surface:#161b22;
+  --border:#21262d;
+  --border2:#30363d;
+  --text:#e6edf3;
+  --muted:#8b949e;
+  --accent:#58a6ff;
+  --green:#238636;
+  --green2:#2ea043;
+  --red:#da3633;
+  --gold:#f0e6d3;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Lora',serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+/* HEADER */
+header{
+  background:var(--surface);
+  border-bottom:1px solid var(--border);
+  padding:16px 24px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  position:sticky;top:0;z-index:50;
+  backdrop-filter:blur(8px);
+}
+.header-logo{
+  font-family:'Playfair Display',serif;
+  font-size:1.5rem;
+  color:var(--gold);
+  letter-spacing:-.5px;
+}
+.header-nav{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.btn{
+  padding:7px 16px;
+  border-radius:20px;
+  border:none;
+  cursor:pointer;
+  font-family:'Lora',serif;
+  font-size:0.85rem;
+  transition:all .2s;
+  text-decoration:none;
+  display:inline-flex;align-items:center;gap:5px;
+}
+.btn-login{background:var(--green);color:#fff}
+.btn-login:hover{background:var(--green2)}
+.btn-logout{background:var(--border);color:var(--muted)}
+.btn-logout:hover{color:var(--text)}
+.btn-adm{background:var(--accent);color:var(--bg);font-weight:700}
+.btn-adm:hover{opacity:.85}
+.usuario-info{color:var(--muted);font-size:0.85rem}
+.usuario-info strong{color:var(--text)}
+
+/* SEARCH */
+.search-wrap{padding:20px 24px 0;display:flex;justify-content:center}
+.search-wrap input{
+  width:100%;max-width:620px;
+  padding:11px 20px;
+  border-radius:30px;
+  border:1px solid var(--border2);
+  background:var(--surface);
+  color:var(--text);
+  font-family:'Lora',serif;
+  font-size:0.95rem;
+  outline:none;
+  transition:border .2s;
+}
+.search-wrap input:focus{border-color:var(--accent)}
+
+/* CARDS */
+.container{padding:20px 24px;max-width:860px;margin:0 auto}
+.card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:16px;
+  margin-bottom:14px;
+  display:flex;gap:16px;align-items:flex-start;
+  position:relative;
+  transition:border-color .2s;
+}
+.card:hover{border-color:var(--border2)}
+.card img{
+  width:110px;height:110px;
+  object-fit:cover;border-radius:8px;
+  flex-shrink:0;
+}
+.card-texto h2{
+  font-family:'Playfair Display',serif;
+  font-size:1.1rem;color:var(--gold);
+  margin-bottom:6px;line-height:1.4;
+}
+.card-texto p{
+  font-size:0.88rem;color:var(--muted);
+  line-height:1.7;
+}
+.card-data{font-size:0.75rem;color:var(--border2);margin-top:6px}
+.btn-excluir{
+  position:absolute;top:10px;right:10px;
+  background:var(--red);color:#fff;
+  border:none;border-radius:6px;
+  padding:5px 10px;cursor:pointer;
+  font-size:0.78rem;font-family:'Lora',serif;
+  display:none;transition:background .2s;
+}
+.btn-excluir:hover{background:#b62324}
+.admin-mode .btn-excluir{display:block}
+.sem-resultado{
+  text-align:center;color:var(--muted);
+  font-style:italic;padding:50px 0;
+}
+
+/* MODAL */
+.modal-overlay{
+  display:none;position:fixed;inset:0;
+  background:rgba(0,0,0,.75);z-index:100;
+  justify-content:center;align-items:center;
+}
+.modal-overlay.ativo{display:flex}
+.modal{
+  background:var(--surface);
+  border-radius:14px;padding:32px;
+  width:100%;max-width:400px;
+  border:1px solid var(--border2);
+  animation:fadeUp .25s ease;
+}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.modal h2{
+  font-family:'Playfair Display',serif;
+  margin-bottom:22px;text-align:center;
+  color:var(--gold);font-size:1.4rem;
+}
+.modal input{
+  width:100%;padding:10px 14px;margin:7px 0;
+  border-radius:8px;border:1px solid var(--border2);
+  background:var(--bg);color:var(--text);
+  font-family:'Lora',serif;font-size:0.95rem;outline:none;
+  transition:border .2s;
+}
+.modal input:focus{border-color:var(--accent)}
+.modal .btn-primary{
+  width:100%;padding:11px;margin-top:12px;
+  border-radius:8px;border:none;
+  background:var(--green);color:#fff;
+  font-family:'Lora',serif;font-size:1rem;cursor:pointer;
+  transition:background .2s;
+}
+.modal .btn-primary:hover{background:var(--green2)}
+.modal .btn-secondary{
+  width:100%;padding:11px;margin-top:8px;
+  border-radius:8px;border:none;
+  background:var(--border);color:var(--muted);
+  font-family:'Lora',serif;font-size:0.95rem;cursor:pointer;
+}
+.modal-erro{color:#f85149;font-size:0.85rem;text-align:center;margin-top:10px;min-height:18px}
+.modal-toggle{text-align:center;margin-top:14px;font-size:0.85rem;color:var(--muted)}
+.modal-toggle span{color:var(--accent);cursor:pointer}
+.modal-toggle span:hover{text-decoration:underline}
+
+/* SOCIAL */
+.social-bar{
+  display:flex;justify-content:center;align-items:center;
+  gap:20px;padding:16px;
+  background:var(--surface);border-top:1px solid var(--border);
+  margin-top:40px;
+}
+.social-bar a{color:var(--muted);transition:color .2s;display:flex}
+.social-bar a:hover{color:var(--accent)}
+.social-bar svg{width:22px;height:22px;fill:currentColor}
+footer{
+  text-align:center;padding:12px;
+  color:#4a5568;font-size:0.8rem;
+  font-family:'Lora',serif;background:var(--surface);
+}
+</style>
+</head>
+<body>
+
+<header>
+  <span class="header-logo">📰 Portal de Notícias</span>
+  <div class="header-nav" id="header-nav">
+    <button class="btn btn-login" onclick="abrirModal()">Entrar / Cadastrar</button>
+  </div>
+</header>
+
+<div class="search-wrap">
+  <input type="text" id="pesquisa" placeholder="🔍 Pesquisar notícias por título..." oninput="filtrar()">
+</div>
+
+<div class="container" id="noticias"></div>
+
+<div class="social-bar">
+  <a href="#" title="Facebook"><svg viewBox="0 0 24 24"><path d="M22 12c0-5.522-4.478-10-10-10S2 6.478 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.988H7.898v-2.89h2.54V9.845c0-2.507 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.772-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z"/></svg></a>
+  <a href="#" title="Instagram"><svg viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 1.366.062 2.633.334 3.608 1.31.975.975 1.248 2.242 1.31 3.608.058 1.266.07 1.646.07 4.85s-.012 3.584-.07 4.85c-.062 1.366-.334 2.633-1.31 3.608-.975.975-2.242 1.248-3.608 1.31-1.266.058-1.646.07-4.85.07s-3.584-.012-4.85-.07c-1.366-.062-2.633-.334-3.608-1.31-.975-.975-1.248-2.242-1.31-3.608C2.175 15.584 2.163 15.204 2.163 12s.012-3.584.07-4.85c.062-1.366.334-2.633 1.31-3.608.975-.975 2.242-1.248 3.608-1.31C8.416 2.175 8.796 2.163 12 2.163zm0-2.163C8.741 0 8.332.014 7.052.072 5.197.157 3.355.673 2.014 2.014.673 3.355.157 5.197.072 7.052.014 8.332 0 8.741 0 12c0 3.259.014 3.668.072 4.948.085 1.855.601 3.697 1.942 5.038 1.341 1.341 3.183 1.857 5.038 1.942C8.332 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 1.855-.085 3.697-.601 5.038-1.942 1.341-1.341 1.857-3.183 1.942-5.038.058-1.28.072-1.689.072-4.948 0-3.259-.014-3.668-.072-4.948-.085-1.855-.601-3.697-1.942-5.038C20.645.673 18.803.157 16.948.072 15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zm0 10.162a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg></a>
+  <a href="#" title="X"><svg viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
+  <a href="#" title="WhatsApp"><svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg></a>
+  <a href="#" title="YouTube"><svg viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg></a>
+  <a href="#" title="Telegram"><svg viewBox="0 0 24 24"><path d="M11.944 0A12 12 0 000 12a12 12 0 0012 12 12 12 0 0012-12A12 12 0 0012 0a12 12 0 00-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 01.171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg></a>
+</div>
+<footer>© 2025 Portal de Notícias. Todos os direitos reservados.</footer>
+
+<!-- MODAL LOGIN / CADASTRO -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <h2 id="modal-titulo">Entrar</h2>
+    <div id="campo-nome" style="display:none">
+      <input type="text" id="inp-nome" placeholder="Seu nome completo">
+    </div>
+    <input type="email" id="inp-email" placeholder="E-mail">
+    <input type="password" id="inp-senha" placeholder="Senha">
+    <button class="btn-primary" onclick="submeter()">Confirmar</button>
+    <button class="btn-secondary" onclick="fecharModal()">Cancelar</button>
+    <p class="modal-erro" id="modal-erro"></p>
+    <div class="modal-toggle">
+      <span id="toggle-texto" onclick="alternarModo()">Não tem conta? Cadastre-se</span>
+    </div>
+  </div>
+</div>
+
+<script>
+const { createClient } = supabase;
+const client = createClient(
+  "https://rmmpzrqzizqrcmpvhxvl.supabase.co",
+  "sb_publishable_vvxAS_b3_iU_Vp4UfoeOLQ_rQBAm1yM"
+);
+
+let todasNoticias = [];
+let modoCadastro = false;
+let sessaoAtual = null;
+
+/* -------- AUTH -------- */
+
+
+async function getIsAdmin(userId) {
+  if (!userId) return false;
+  const { data } = await client
+    .from('perfis')
+    .select('is_admin')
+    .eq('id', userId)
+    .single();
+  return data?.is_admin === true;
+}
+
+/* -------- MODAL -------- */
+function abrirModal() {
+  document.getElementById('modal').classList.add('ativo');
+  document.getElementById('modal-erro').textContent = '';
+}
+function fecharModal() {
+  document.getElementById('modal').classList.remove('ativo');
+  limparCampos();
+}
+function alternarModo() {
+  modoCadastro = !modoCadastro;
+  document.getElementById('modal-titulo').textContent = modoCadastro ? 'Cadastrar' : 'Entrar';
+  document.getElementById('campo-nome').style.display = modoCadastro ? 'block' : 'none';
+  document.getElementById('toggle-texto').textContent = modoCadastro ? 'Já tem conta? Faça login' : 'Não tem conta? Cadastre-se';
+  document.getElementById('modal-erro').textContent = '';
+}
+function limparCampos() {
+  ['inp-nome','inp-email','inp-senha'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('modal-erro').textContent = '';
+}
+
+async function submeter() {
+  const email = document.getElementById('inp-email').value.trim();
+  const senha  = document.getElementById('inp-senha').value.trim();
+  const erro   = document.getElementById('modal-erro');
+
+  if (!email || !senha) { erro.textContent = 'Preencha todos os campos.'; return; }
+
+  if (modoCadastro) {
+    const nome = document.getElementById('inp-nome').value.trim();
+    if (!nome) { erro.textContent = 'Informe seu nome.'; return; }
+
+    const { data, error: signUpError } = await client.auth.signUp({
+      email, password: senha,
+      options: { data: { nome } }
+    });
+
+    if (signUpError) { erro.textContent = signUpError.message; return; }
+
+    // Cria perfil na tabela perfis
+    if (data.user) {
+      await client.from('perfis').insert([{
+  id: data.user.id,
+  email: data.user.email,
+  is_admin: false
+}]);
+    }
+
+    alert('Cadastro realizado! Verifique seu e-mail para confirmar a conta.');
+    alternarModo();
+    limparCampos();
+
+  } else {
+    const { error: signInError } = await client.auth.signInWithPassword({ email, password: senha });
+    if (signInError) { erro.textContent = 'E-mail ou senha inválidos.'; return; }
+    fecharModal();
+  }
+}
+
+/* -------- HEADER -------- */
+async function atualizarHeader() {
+  const nav = document.getElementById('header-nav');
+
+  if (!sessaoAtual) {
+    nav.innerHTML = `<button class="btn btn-login" onclick="abrirModal()">Entrar / Cadastrar</button>`;
+    return;
+  }
+
+  const isAdmin = await getIsAdmin(sessaoAtual.user.id);
+  const nome = sessaoAtual.user.user_metadata?.nome || sessaoAtual.user.email;
+
+  const admBtn = isAdmin
+    ? `<a href="adm.html" class="btn btn-adm">⚙️ Painel ADM</a>`
+    : '';
+
+  nav.innerHTML = `
+    <span class="usuario-info">Olá, <strong>${nome}</strong></span>
+    ${admBtn}
+    <button class="btn btn-logout" onclick="logout()">Sair</button>
+  `;
+}
+
+async function logout() {
+  await client.auth.signOut();
+}
+
+/* -------- EXCLUIR NOTÍCIA -------- */
+async function excluirNoticia(id) {
+  if (!confirm('Tem certeza que deseja excluir esta notícia?')) return;
+  const { error } = await client.from('noticias').delete().eq('id', id);
+  if (error) { alert('Erro ao excluir: ' + error.message); return; }
+  todasNoticias = todasNoticias.filter(n => n.id !== id);
+  renderizar(todasNoticias);
+}
+
+/* -------- RENDERIZAR -------- */
+async function renderizar(lista) {
+  const div = document.getElementById('noticias');
+  const isAdmin = sessaoAtual ? await getIsAdmin(sessaoAtual.user.id) : false;
+
+  div.innerHTML = '';
+  if (lista.length === 0) {
+    div.innerHTML = '<p class="sem-resultado">Nenhuma notícia encontrada.</p>';
+    return;
+  }
+  lista.forEach(n => {
+    const data = n.created_at ? new Date(n.created_at).toLocaleDateString('pt-BR') : '';
+    div.innerHTML += `
+      <div class="card ${isAdmin ? 'admin-mode' : ''}">
+        ${n.imagem ? `<img src="${n.imagem}" onerror="this.style.display='none'" alt="">` : ''}
+        <div class="card-texto">
+          <h2>${n.titulo}</h2>
+          <p>${n.conteudo}</p>
+          ${data ? `<p class="card-data">📅 ${data}</p>` : ''}
+        </div>
+        ${isAdmin ? `<button class="btn-excluir" onclick="excluirNoticia(${n.id})">🗑️ Excluir</button>` : ''}
+      </div>
+    `;
+  });
+}
+
+function filtrar() {
+  const termo = document.getElementById('pesquisa').value.toLowerCase();
+  const filtradas = todasNoticias.filter(n => n.titulo.toLowerCase().includes(termo));
+  renderizar(filtradas);
+}
+
+async function carregarNoticias() {
+  const { data } = await client.from('noticias').select('*').order('id', { ascending: false });
+  todasNoticias = data || [];
+  renderizar(todasNoticias);
+}
+
+document.getElementById('modal').addEventListener('click', function(e) {
+  if (e.target === this) fecharModal();
+});
+
+carregarNoticias();
+
+
+// FORÇA carregar usuário ao abrir página
+(async () => {
+  const { data: { session } } = await client.auth.getSession();
+  sessaoAtual = session;
+  await atualizarHeader();
+})();
+</script>
+
+
+
+
+
+</body>
+</html>

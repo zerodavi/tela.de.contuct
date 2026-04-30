@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin - Publicar</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0d1117;
+  --surface:#161b22;
+  --border:#21262d;
+  --border2:#30363d;
+  --text:#e6edf3;
+  --muted:#8b949e;
+  --accent:#58a6ff;
+  --green:#238636;
+  --green2:#2ea043;
+  --red:#da3633;
+  --gold:#f0e6d3;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Lora',serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+header{
+  background:var(--surface);padding:15px 20px;
+  display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid var(--border);
+  position:sticky;top:0;z-index:50;
+}
+header h1{font-family:'Playfair Display',serif;font-size:1.5rem;color:var(--gold)}
+.btn-voltar{
+  padding:7px 16px;background:var(--border);color:var(--muted);
+  border:none;border-radius:20px;font-family:'Lora',serif;
+  font-size:0.85rem;cursor:pointer;text-decoration:none;
+  display:inline-flex;align-items:center;gap:5px;transition:color .2s;
+}
+.btn-voltar:hover{color:var(--text)}
+
+.container{padding:20px;max-width:700px;margin:0 auto}
+.form-box{
+  background:var(--surface);border-radius:12px;
+  padding:24px;border:1px solid var(--border);margin-bottom:30px;
+}
+.form-box h2{
+  font-family:'Playfair Display',serif;margin-bottom:18px;
+  font-size:1.2rem;color:var(--gold);
+}
+input,textarea{
+  width:100%;margin:7px 0;padding:10px 14px;
+  border-radius:8px;border:1px solid var(--border2);
+  background:var(--bg);color:var(--text);
+  font-family:'Lora',serif;font-size:0.95rem;
+  outline:none;transition:border .2s;
+}
+input:focus,textarea:focus{border-color:var(--accent)}
+textarea{min-height:130px;resize:vertical}
+input[type=file]{padding:8px;cursor:pointer}
+.btn-publicar{
+  padding:11px 24px;background:var(--green);color:#fff;
+  border:none;border-radius:8px;font-family:'Lora',serif;
+  font-size:1rem;cursor:pointer;width:100%;margin-top:8px;
+  transition:background .2s;
+}
+.btn-publicar:hover{background:var(--green2)}
+
+.noticias-titulo{
+  font-family:'Playfair Display',serif;font-size:1.2rem;
+  margin-bottom:15px;color:var(--gold);
+}
+.noticia-item{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:10px;padding:14px 16px;margin-bottom:12px;
+  display:flex;align-items:center;gap:14px;
+}
+.noticia-item img{width:70px;height:70px;object-fit:cover;border-radius:8px;flex-shrink:0}
+.noticia-info{flex:1;min-width:0}
+.noticia-info h3{
+  font-family:'Playfair Display',serif;font-size:1rem;
+  margin-bottom:4px;color:var(--gold);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.noticia-info p{
+  font-size:0.82rem;color:var(--muted);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.btn-excluir{
+  background:var(--red);color:#fff;border:none;
+  border-radius:6px;padding:7px 14px;cursor:pointer;
+  font-size:0.85rem;font-family:'Lora',serif;flex-shrink:0;
+  transition:background .2s;
+}
+.btn-excluir:hover{background:#b62324}
+.sem-noticias{text-align:center;color:var(--muted);font-style:italic;padding:20px 0}
+
+/* Bloqueio de acesso */
+.acesso-negado{
+  display:flex;flex-direction:column;align-items:center;
+  justify-content:center;min-height:60vh;text-align:center;gap:16px;
+}
+.acesso-negado h2{font-family:'Playfair Display',serif;color:var(--red);font-size:1.8rem}
+.acesso-negado p{color:var(--muted)}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>⚙️ Painel ADM</h1>
+  <a href="index.html" class="btn-voltar">⬅ Voltar ao portal</a>
+</header>
+
+<div class="container" id="conteudo-adm">
+  <!-- Carregando... -->
+  <p style="color:var(--muted);text-align:center;padding:40px">Verificando acesso...</p>
+</div>
+
+<script>
+const { createClient } = supabase;
+const client = createClient(
+  "https://rmmpzrqzizqrcmpvhxvl.supabase.co",
+  "sb_publishable_vvxAS_b3_iU_Vp4UfoeOLQ_rQBAm1yM"
+);
+
+let todasNoticias = [];
+let sessaoAtual = null;
+
+/* -------- VERIFICAR ACESSO -------- */
+async function verificarAcesso() {
+  // 1. Verifica usuário logado
+  const { data: { user } } = await client.auth.getUser();
+
+  if (!user) {
+    mostrarAcessoNegado('Você precisa estar logado.');
+    return;
+  }
+
+  // 2. Verifica admin
+  const { data: perfil, error } = await client
+    .from('perfis')
+    .select('is_admin')
+    .eq('id', user.id)
+    .single();
+
+  if (error || !perfil || perfil.is_admin !== true) {
+    mostrarAcessoNegado('Você não tem permissão de administrador.');
+    return;
+  }
+
+  // 3. Liberado
+  mostrarPainel();
+  carregarNoticias();
+}
+
+
+
+
+ 
+
+function mostrarAcessoNegado(msg) {
+  document.getElementById('conteudo-adm').innerHTML = `
+    <div class="acesso-negado">
+      <h2>🚫 Acesso Negado</h2>
+      <p>${msg}</p>
+      <a href="index.html" class="btn-voltar">⬅ Voltar ao portal</a>
+    </div>
+  `;
+}
+
+function mostrarPainel() {
+  document.getElementById('conteudo-adm').innerHTML = `
+    <div class="form-box">
+      <h2>📝 Publicar Nova Notícia</h2>
+      <input type="text" id="titulo" placeholder="Título da notícia">
+      <textarea id="conteudo" placeholder="Conteúdo da notícia"></textarea>
+      <input type="file" id="imagem" accept="image/*">
+      <button class="btn-publicar" onclick="publicar()">✅ Publicar Notícia</button>
+    </div>
+    <h2 class="noticias-titulo">🗂️ Notícias Publicadas</h2>
+    <div id="lista-noticias"></div>
+  `;
+}
+
+/* -------- PUBLICAR -------- */
+async function publicar() {
+  const titulo   = document.getElementById('titulo').value.trim();
+  const conteudo = document.getElementById('conteudo').value.trim();
+  const file     = document.getElementById('imagem').files[0];
+
+  if (!titulo || !conteudo) { alert('Preencha o título e o conteúdo.'); return; }
+
+  let urlImagem = '';
+
+  if (file) {
+    const nome = Date.now() + "_" + Math.random() + "_" + file.name;
+    const { error: uploadError } = await client.storage.from('imagens').upload(nome, file);
+    if (uploadError) { alert("Erro no upload: " + uploadError.message); return; }
+    const { data } = client.storage.from('imagens').getPublicUrl(nome);
+    urlImagem = data.publicUrl;
+  }
+
+  const { error } = await client.from('noticias').insert([{ titulo, conteudo, imagem: urlImagem }]);
+
+  if (error) {
+    alert("Erro ao salvar: " + error.message);
+  } else {
+    alert("Notícia publicada!");
+    document.getElementById('titulo').value = '';
+    document.getElementById('conteudo').value = '';
+    document.getElementById('imagem').value = '';
+    carregarNoticias();
+  }
+}
+
+/* -------- EXCLUIR -------- */
+async function excluir(id) {
+  if (!confirm('Tem certeza que deseja excluir esta notícia?')) return;
+  const { error } = await client.from('noticias').delete().eq('id', id);
+  if (error) { alert('Erro ao excluir: ' + error.message); return; }
+  todasNoticias = todasNoticias.filter(n => n.id !== id);
+  renderizar();
+}
+
+function renderizar() {
+  const div = document.getElementById('lista-noticias');
+  if (!div) return;
+  if (todasNoticias.length === 0) {
+    div.innerHTML = '<p class="sem-noticias">Nenhuma notícia publicada ainda.</p>';
+    return;
+  }
+  div.innerHTML = todasNoticias.map(n => `
+    <div class="noticia-item">
+      ${n.imagem ? `<img src="${n.imagem}" onerror="this.style.display='none'" alt="">` : ''}
+      <div class="noticia-info">
+        <h3>${n.titulo}</h3>
+        <p>${n.conteudo}</p>
+      </div>
+      <button class="btn-excluir" onclick="excluir(${n.id})">🗑️ Excluir</button>
+    </div>
+  `).join('');
+}
+
+async function carregarNoticias() {
+  const { data } = await client.from('noticias').select('*').order('id', { ascending: false });
+  todasNoticias = data || [];
+  renderizar();
+}
+
+verificarAcesso();
+</script>
+</body>
+</html>
