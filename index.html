@@ -628,126 +628,8 @@ footer {
 .social-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); transform: translateY(-2px); }
 .social-btn svg { width: 16px; height: 16px; fill: currentColor; }
 
-/* ── LIGHTBOX LEITOR ── */
-.lightbox-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.88);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  z-index: 250;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.28s ease;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  padding: 24px 16px 48px;
-}
-.lightbox-overlay.open {
-  opacity: 1;
-  pointer-events: all;
-}
-.lightbox-box {
-  background: var(--surface);
-  border: 1px solid var(--border2);
-  border-radius: 6px;
-  width: 100%;
-  max-width: 720px;
-  margin: auto;
-  position: relative;
-  transform: translateY(18px);
-  transition: transform 0.28s ease;
-  overflow: hidden;
-}
-.lightbox-overlay.open .lightbox-box {
-  transform: translateY(0);
-}
-.lightbox-close {
-  position: absolute;
-  top: 14px;
-  right: 16px;
-  z-index: 10;
-  background: rgba(8,11,15,0.7);
-  border: 1px solid var(--border2);
-  border-radius: 50%;
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--muted);
-  font-size: 1.1rem;
-  cursor: pointer;
-  transition: color 0.2s, border-color 0.2s, background 0.2s;
-  line-height: 1;
-}
-.lightbox-close:hover {
-  color: var(--text);
-  border-color: var(--muted);
-  background: rgba(8,11,15,0.95);
-}
-/* Área da imagem — scroll horizontal se maior que a tela */
-.lightbox-img-wrap {
-  width: 100%;
-  overflow-x: auto;
-  overflow-y: hidden;
-  -webkit-overflow-scrolling: touch;
-  background: #050709;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 80px;
-  border-bottom: 1px solid var(--border);
-}
-.lightbox-img-wrap img {
-  display: block;
-  /* tamanho original — sem max-width forçado */
-  max-width: none;
-  height: auto;
-}
-.lightbox-content {
-  padding: 28px 30px 32px;
-}
-.lightbox-eyebrow {
-  font-family: 'Josefin Sans', sans-serif;
-  font-size: 0.62rem;
-  letter-spacing: 0.28em;
-  text-transform: uppercase;
-  color: var(--accent);
-  margin-bottom: 10px;
-}
-.lightbox-title {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: clamp(1.5rem, 4vw, 2.1rem);
-  font-weight: 600;
-  color: var(--white);
-  line-height: 1.22;
-  margin-bottom: 10px;
-}
-.lightbox-date {
-  font-family: 'Josefin Sans', sans-serif;
-  font-size: 0.63rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--muted2);
-  margin-bottom: 20px;
-  padding-bottom: 20px;
-  border-bottom: 1px solid var(--border);
-}
-.lightbox-body {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 1.08rem;
-  color: var(--text);
-  line-height: 1.75;
-  white-space: pre-wrap;
-}
-
 /* ── RESPONSIVE ── */
 @media (max-width: 680px) {
-  .card-read { opacity: 1; }
   .topbar { display: none; }
   .header-inner { padding: 0 16px; }
   .container { padding: 20px 16px 50px; }
@@ -898,20 +780,6 @@ footer {
   </div>
 </div>
 
-<!-- LIGHTBOX LEITOR -->
-<div class="lightbox-overlay" id="lightbox-overlay" role="dialog" aria-modal="true" aria-label="Lendo notícia">
-  <div class="lightbox-box" id="lightbox-box">
-    <button class="lightbox-close" onclick="fecharLightbox()" aria-label="Fechar">✕</button>
-    <div class="lightbox-img-wrap" id="lightbox-img-wrap"></div>
-    <div class="lightbox-content">
-      <div class="lightbox-eyebrow">Notícia</div>
-      <h2 class="lightbox-title" id="lightbox-title"></h2>
-      <div class="lightbox-date" id="lightbox-date"></div>
-      <div class="lightbox-body" id="lightbox-body"></div>
-    </div>
-  </div>
-</div>
-
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
 
@@ -925,47 +793,6 @@ const client = createClient(
 let sessaoAtual  = null;
 let cadastro     = false;
 let todasNoticias = [];
-
-/* ── LIGHTBOX ── */
-function abrirLightbox(n) {
-  const overlay  = document.getElementById('lightbox-overlay');
-  const imgWrap  = document.getElementById('lightbox-img-wrap');
-  const titleEl  = document.getElementById('lightbox-title');
-  const dateEl   = document.getElementById('lightbox-date');
-  const bodyEl   = document.getElementById('lightbox-body');
-
-  // Imagem no tamanho original
-  if (n.imagem) {
-    imgWrap.style.display = 'flex';
-    imgWrap.innerHTML = `<img src="${n.imagem}" alt="${n.titulo}"
-      onerror="this.parentElement.style.display='none'">`;
-  } else {
-    imgWrap.style.display = 'none';
-    imgWrap.innerHTML = '';
-  }
-
-  titleEl.textContent = n.titulo;
-  dateEl.textContent  = formatarData(n.created_at) || 'Publicado recentemente';
-  bodyEl.textContent  = n.conteudo;
-
-  overlay.classList.add('open');
-  document.body.style.overflow = 'hidden';
-}
-
-function fecharLightbox() {
-  document.getElementById('lightbox-overlay').classList.remove('open');
-  document.body.style.overflow = '';
-}
-
-// Fechar ao clicar fora do box
-document.getElementById('lightbox-overlay').addEventListener('click', function(e) {
-  if (e.target === this) fecharLightbox();
-});
-
-// Fechar com Escape (desktop)
-document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape') fecharLightbox();
-});
 
 /* ── DATA/HORA ── */
 function atualizarRelogio() {
@@ -1123,8 +950,8 @@ function renderizar(noticias) {
   const countLabel = document.getElementById('count-label');
   countLabel.textContent = `${noticias.length} publicaç${noticias.length === 1 ? 'ão' : 'ões'}`;
 
-  lista.innerHTML = noticias.map((n, i) => `
-    <div class="card" onclick="abrirLightbox(todasNoticias.find(x=>x.id===__NOTICIA_ID__))" data-id="${n.id}">
+  lista.innerHTML = noticias.map(n => `
+    <div class="card">
       ${n.imagem
         ? `<img class="card-thumb" src="${n.imagem}" alt="${n.titulo}" onerror="this.outerHTML='<div class=card-thumb-ph>📰</div>'">`
         : `<div class="card-thumb-ph">📰</div>`}
@@ -1139,16 +966,7 @@ function renderizar(noticias) {
         </div>
       </div>
     </div>
-  `.replace('__NOTICIA_ID__', n.id)).join('');
-
-  // Adiciona eventos de clique nos cards após renderizar
-  document.querySelectorAll('.card[data-id]').forEach(card => {
-    card.addEventListener('click', function() {
-      const id = parseInt(this.dataset.id);
-      const noticia = todasNoticias.find(x => x.id === id);
-      if (noticia) abrirLightbox(noticia);
-    });
-  });
+  `).join('');
 }
 
 /* ── CARREGAR NOTÍCIAS ── */
