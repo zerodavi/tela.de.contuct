@@ -2,7 +2,9 @@
 <html lang="pt-br">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
 <title>Portal de Notícias</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&family=Josefin+Sans:wght@300;400;600&display=swap" rel="stylesheet">
@@ -26,6 +28,7 @@
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+img { max-width: 100%; display: block; }
 
 body {
   font-family: 'Cormorant Garamond', serif;
@@ -260,7 +263,7 @@ header {
   white-space: nowrap;
 }
 
-/* ── LISTA DE NOTÍCIAS — layout horizontal (referência) ── */
+/* ── LISTA DE NOTÍCIAS ── */
 #lista-noticias {
   display: flex;
   flex-direction: column;
@@ -269,6 +272,7 @@ header {
   border: 1px solid var(--border);
   border-radius: 4px;
   overflow: hidden;
+  width: 100%;
 }
 
 .card {
@@ -281,6 +285,9 @@ header {
   transition: background 0.2s;
   overflow: hidden;
   min-height: 110px;
+  width: 100%;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
 }
 .card::after {
   content: '';
@@ -293,38 +300,51 @@ header {
 }
 .card:hover { background: var(--surface2); }
 .card:hover::after { opacity: 1; }
+.card:active { background: var(--surface2); }
+.card:active::after { opacity: 1; }
 
-
-
-/* Thumbnail quadrada */
-.card-thumb {
+/* Wrapper da imagem — garante tamanho fixo e sem overflow */
+.card-thumb-wrap {
   width: 110px;
-  height: 110px;
+  min-width: 110px;
+  max-width: 110px;
+  flex-shrink: 0;
+  align-self: stretch;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+}
+
+.card-thumb {
+  width: 100%;
+  height: 100%;
+  min-height: 110px;
   flex-shrink: 0;
   object-fit: cover;
+  object-position: center;
   display: block;
   filter: brightness(0.9) saturate(0.82);
   transition: filter 0.3s;
-  align-self: stretch;
 }
 .card:hover .card-thumb { filter: brightness(1) saturate(0.95); }
 
 .card-thumb-ph {
-  width: 110px;
-  height: 110px;
-  flex-shrink: 0;
+  width: 100%;
+  min-height: 110px;
+  flex: 1;
   background: linear-gradient(135deg, var(--surface2) 0%, var(--border) 100%);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 1.6rem;
   color: var(--muted2);
-  align-self: stretch;
 }
+
 
 /* Linha divisória vertical */
 .card-divider {
   width: 1px;
+  min-width: 1px;
   background: var(--border);
   flex-shrink: 0;
   align-self: stretch;
@@ -333,12 +353,13 @@ header {
 /* Corpo do card */
 .card-body {
   flex: 1;
-  padding: 14px 20px;
   min-width: 0;
+  padding: 14px 18px;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 6px;
+  gap: 5px;
+  overflow: hidden;
 }
 .card-category {
   font-family: 'Josefin Sans', sans-serif;
@@ -346,10 +367,13 @@ header {
   letter-spacing: 0.22em;
   text-transform: uppercase;
   color: var(--accent);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .card-title {
   font-family: 'Cormorant Garamond', serif;
-  font-size: 1.15rem;
+  font-size: 1.1rem;
   font-weight: 600;
   color: var(--white);
   line-height: 1.25;
@@ -357,28 +381,34 @@ header {
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  word-break: break-word;
 }
 .card-text {
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   color: var(--muted);
   line-height: 1.5;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  word-break: break-word;
 }
 .card-footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-top: 4px;
+  margin-top: 2px;
+  gap: 8px;
 }
 .card-date {
   font-family: 'Josefin Sans', sans-serif;
-  font-size: 0.62rem;
-  letter-spacing: 0.08em;
+  font-size: 0.6rem;
+  letter-spacing: 0.06em;
   color: var(--muted2);
   text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .card-read {
   font-family: 'Josefin Sans', sans-serif;
@@ -386,10 +416,16 @@ header {
   letter-spacing: 0.12em;
   color: var(--accent);
   text-transform: uppercase;
-  opacity: 0;
-  transition: opacity 0.2s;
+  white-space: nowrap;
+  flex-shrink: 0;
+  /* sempre visível no mobile, hover no desktop */
+  opacity: 1;
 }
-.card:hover .card-read { opacity: 1; }
+@media (hover: hover) {
+  .card-read { opacity: 0; }
+  .card:hover .card-read { opacity: 1; }
+}
+
 
 /* ── SKELETON ── */
 .skeleton-list {
@@ -628,6 +664,99 @@ footer {
 .social-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); transform: translateY(-2px); }
 .social-btn svg { width: 16px; height: 16px; fill: currentColor; }
 
+/* ── MODAL LEITURA DE NOTÍCIA ── */
+.modal-noticia-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.85);
+  backdrop-filter: blur(8px);
+  z-index: 200;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+  overflow-y: auto;
+  padding: 40px 20px;
+}
+.modal-noticia-overlay.open { opacity: 1; pointer-events: all; }
+
+.modal-noticia {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  width: 100%;
+  max-width: 780px;
+  position: relative;
+  transform: translateY(20px);
+  transition: transform 0.3s;
+  overflow: hidden;
+  margin: auto;
+}
+.modal-noticia-overlay.open .modal-noticia { transform: translateY(0); }
+
+.modal-noticia-close {
+  position: absolute; top: 16px; right: 18px;
+  background: rgba(8,11,15,0.7); border: 1px solid var(--border2);
+  color: var(--muted); font-size: 1rem;
+  cursor: pointer; transition: all 0.2s;
+  border-radius: 50%; width: 36px; height: 36px;
+  display: flex; align-items: center; justify-content: center;
+  z-index: 10;
+}
+.modal-noticia-close:hover { color: var(--text); border-color: var(--muted); background: rgba(8,11,15,0.9); }
+
+.modal-noticia-img {
+  width: 100%;
+  max-height: 340px;
+  object-fit: cover;
+  display: block;
+  filter: brightness(0.88) saturate(0.8);
+}
+
+.modal-noticia-body {
+  padding: 32px 36px 40px;
+}
+
+.modal-noticia-category {
+  font-family: 'Josefin Sans', sans-serif;
+  font-size: 0.65rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 12px;
+  display: block;
+}
+
+.modal-noticia-titulo {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(1.6rem, 4vw, 2.4rem);
+  font-weight: 600;
+  color: var(--white);
+  line-height: 1.2;
+  margin-bottom: 14px;
+}
+
+.modal-noticia-meta {
+  font-family: 'Josefin Sans', sans-serif;
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  color: var(--muted2);
+  text-transform: uppercase;
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.modal-noticia-conteudo {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.15rem;
+  color: var(--text);
+  line-height: 1.8;
+  white-space: pre-wrap;
+}
+
 /* ── RESPONSIVE ── */
 @media (max-width: 680px) {
   .topbar { display: none; }
@@ -635,19 +764,50 @@ footer {
   .container { padding: 20px 16px 50px; }
   .hero { padding: 36px 16px 24px; }
   .search-wrap { padding: 0 16px; margin-top: 20px; }
+
+  /* Cards — todos iguais no mobile */
   .card { min-height: 90px; }
-  .card-thumb { width: 88px; height: 90px; }
-  .card-thumb-ph { width: 88px; height: 90px; font-size: 1.4rem; }
-  .card:first-child { min-height: 130px; }
-  .card:first-child .card-thumb    { width: 130px; height: 130px; }
-  .card:first-child .card-thumb-ph { width: 130px; height: 130px; font-size: 1.8rem; }
-  .card:first-child .card-title    { font-size: 1.1rem; }
-  .skel-thumb { width: 88px; }
-  .skeleton-item:first-child .skel-thumb { width: 130px; }
-  .card-body { padding: 10px 14px; }
+  .card-thumb {
+    width: 88px;
+    min-width: 88px;
+    max-width: 88px;
+    min-height: 90px;
+  }
+  .card-thumb-ph {
+    width: 88px;
+    min-width: 88px;
+    max-width: 88px;
+    min-height: 90px;
+    font-size: 1.3rem;
+  }
+  .card-body { padding: 10px 12px; gap: 4px; }
+  .card-title { font-size: 0.98rem; }
+  .card-text { display: none; } /* esconde resumo no mobile para economizar espaço */
+  .card-date { font-size: 0.58rem; }
+
+  /* Skeleton */
+  .skel-thumb { width: 88px; min-width: 88px; }
+  .skeleton-item { height: 90px; }
+  .skeleton-item:first-child { height: 90px; }
+  .skeleton-item:first-child .skel-thumb { width: 88px; }
+
   .footer-top { flex-direction: column; gap: 10px; text-align: center; }
   footer { padding: 24px 16px; }
+
+  /* Modal notícia no mobile */
+  .modal-noticia-overlay { padding: 0; align-items: flex-end; }
+  .modal-noticia { border-radius: 12px 12px 0 0; max-height: 92vh; overflow-y: auto; }
+  .modal-noticia-img { max-height: 220px; }
+  .modal-noticia-body { padding: 22px 20px 36px; }
+  .modal-noticia-titulo { font-size: 1.4rem; }
+  .modal-noticia-conteudo { font-size: 1.05rem; }
 }
+
+@media (min-width: 681px) and (max-width: 900px) {
+  .card-thumb { width: 100px; min-width: 100px; max-width: 100px; min-height: 110px; }
+  .card-thumb-ph { width: 100px; min-width: 100px; max-width: 100px; min-height: 110px; }
+}
+
 </style>
 </head>
 <body>
@@ -751,6 +911,20 @@ footer {
   </div>
 </footer>
 
+<!-- MODAL LEITURA DE NOTÍCIA -->
+<div class="modal-noticia-overlay" id="modal-noticia-overlay">
+  <div class="modal-noticia" role="dialog" aria-modal="true">
+    <button class="modal-noticia-close" onclick="fecharNoticia()" aria-label="Fechar">✕</button>
+    <img class="modal-noticia-img" id="noticia-img" src="" alt="" style="display:none">
+    <div class="modal-noticia-body">
+      <span class="modal-noticia-category">Notícia</span>
+      <h2 class="modal-noticia-titulo" id="noticia-titulo"></h2>
+      <div class="modal-noticia-meta" id="noticia-meta"></div>
+      <div class="modal-noticia-conteudo" id="noticia-conteudo"></div>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL -->
 <div class="modal-overlay" id="modal-overlay">
   <div class="modal" role="dialog" aria-modal="true">
@@ -805,7 +979,45 @@ function atualizarRelogio() {
 atualizarRelogio();
 setInterval(atualizarRelogio, 60000);
 
-/* ── MODAL ── */
+/* ── LEITURA DE NOTÍCIA ── */
+function abrirNoticia(id) {
+  const n = todasNoticias.find(x => x.id === id);
+  if (!n) return;
+
+  const imgEl = document.getElementById('noticia-img');
+  if (n.imagem) {
+    imgEl.src = n.imagem;
+    imgEl.alt = n.titulo;
+    imgEl.style.display = 'block';
+    imgEl.onerror = () => { imgEl.style.display = 'none'; };
+  } else {
+    imgEl.style.display = 'none';
+  }
+
+  document.getElementById('noticia-titulo').textContent = n.titulo;
+  document.getElementById('noticia-meta').textContent = formatarData(n.created_at) || 'Publicado recentemente';
+  document.getElementById('noticia-conteudo').textContent = n.conteudo;
+
+  const overlay = document.getElementById('modal-noticia-overlay');
+  overlay.classList.add('open');
+  overlay.scrollTop = 0;
+  document.body.style.overflow = 'hidden';
+}
+
+function fecharNoticia() {
+  document.getElementById('modal-noticia-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+document.getElementById('modal-noticia-overlay').addEventListener('click', e => {
+  if (e.target === e.currentTarget) fecharNoticia();
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') fecharNoticia();
+});
+
+/* ── MODAL LOGIN ── */
 function abrirModal() {
   document.getElementById('modal-overlay').classList.add('open');
   document.getElementById('email').focus();
@@ -951,10 +1163,13 @@ function renderizar(noticias) {
   countLabel.textContent = `${noticias.length} publicaç${noticias.length === 1 ? 'ão' : 'ões'}`;
 
   lista.innerHTML = noticias.map(n => `
-    <div class="card">
-      ${n.imagem
-        ? `<img class="card-thumb" src="${n.imagem}" alt="${n.titulo}" onerror="this.outerHTML='<div class=card-thumb-ph>📰</div>'">`
-        : `<div class="card-thumb-ph">📰</div>`}
+    <div class="card" onclick="abrirNoticia(${n.id})">
+      <div class="card-thumb-wrap">
+        ${n.imagem
+          ? `<img class="card-thumb" src="${n.imagem}" alt="${n.titulo}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+             <div class="card-thumb-ph" style="display:none">📰</div>`
+          : `<div class="card-thumb-ph">📰</div>`}
+      </div>
       <div class="card-divider"></div>
       <div class="card-body">
         <span class="card-category">Notícia</span>
