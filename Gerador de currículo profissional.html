@@ -483,6 +483,7 @@
       .curriculo { width: 100%; }
     }
   </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body>
 
@@ -499,23 +500,23 @@
 
     <div class="panel-section">
       <div class="panel-section-title">Informações Pessoais</div>
-      <label>Nome Completo</label>
-      <input type="text" id="nome" placeholder="Ex: Ana Paula Souza" oninput="atualizar()">
-      <label>Cargo / Título Profissional</label>
-      <input type="text" id="cargo" placeholder="Ex: Designer UX Senior" oninput="atualizar()">
-      <label>E-mail</label>
-      <input type="text" id="email" placeholder="email@exemplo.com" oninput="atualizar()">
-      <label>Telefone</label>
-      <input type="text" id="telefone" placeholder="(00) 00000-0000" oninput="atualizar()">
-      <label>Endereço / Cidade</label>
-      <input type="text" id="endereco" placeholder="São Paulo, SP" oninput="atualizar()">
-      <label>Foto de Perfil</label>
-      <input type="file" id="foto" accept="image/*" onchange="carregarFoto(event)">
+      <label for="nome">Nome Completo</label>
+      <input type="text" id="nome" name="nome" autocomplete="name" placeholder="Ex: Ana Paula Souza" oninput="atualizar()">
+      <label for="cargo">Cargo / Título Profissional</label>
+      <input type="text" id="cargo" name="cargo" autocomplete="organization-title" placeholder="Ex: Designer UX Senior" oninput="atualizar()">
+      <label for="email">E-mail</label>
+      <input type="text" id="email" name="email" autocomplete="email" placeholder="email@exemplo.com" oninput="atualizar()">
+      <label for="telefone">Telefone</label>
+      <input type="text" id="telefone" name="telefone" autocomplete="tel" placeholder="(00) 00000-0000" oninput="atualizar()">
+      <label for="endereco">Endereço / Cidade</label>
+      <input type="text" id="endereco" name="endereco" autocomplete="address-level2" placeholder="São Paulo, SP" oninput="atualizar()">
+      <label for="foto">Foto de Perfil</label>
+      <input type="file" id="foto" name="foto" autocomplete="off" accept="image/*" onchange="carregarFoto(event)">
     </div>
 
     <div class="panel-section">
       <div class="panel-section-title">Resumo Profissional</div>
-      <textarea id="resumo" rows="4" placeholder="Breve descrição da sua trajetória, objetivos e diferenciais..." oninput="enforcarQuebraResumo(this); atualizar()"></textarea>
+      <textarea id="resumo" name="resumo" autocomplete="off" rows="4" placeholder="Breve descrição da sua trajetória, objetivos e diferenciais..." oninput="enforcarQuebraResumo(this); atualizar()"></textarea>
     </div>
 
     <div class="panel-section">
@@ -545,9 +546,13 @@
       </button>
     </div>
 
-    <button class="btn-print" onclick="window.print()">
+    <button class="btn-print" id="btnDownload" onclick="downloadPDF()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Baixar PDF
+    </button>
+    <button class="btn-print" style="background:var(--ink-light);margin-top:6px;" onclick="window.print()">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-      Baixar / Imprimir PDF
+      Imprimir
     </button>
   </div>
 
@@ -621,19 +626,21 @@
       atualizarHabilidades();
     }
 
+    let _expCount = 0;
     function adicionarExperiencia() {
       const container = document.getElementById('experiencias');
       const div = document.createElement('div');
       div.className = 'box experiencia';
+      const n = ++_expCount;
       div.innerHTML = `
-        <label>Empresa</label>
-        <input type="text" placeholder="Nome da empresa" class="empresa" oninput="atualizar()">
-        <label>Cargo</label>
-        <input type="text" placeholder="Cargo exercido" class="cargoExp" oninput="atualizar()">
-        <label>Período</label>
-        <input type="text" placeholder="Jan 2021 – Dez 2023" class="periodo" oninput="atualizar()">
-        <label>Descrição</label>
-        <textarea placeholder="Principais atividades e conquistas..." class="descricao" oninput="enforcarQuebra(this); atualizar()"></textarea>
+        <label for="empresa-${n}">Empresa</label>
+        <input type="text" id="empresa-${n}" name="empresa-${n}" autocomplete="organization" placeholder="Nome da empresa" class="empresa" oninput="atualizar()">
+        <label for="cargoExp-${n}">Cargo</label>
+        <input type="text" id="cargoExp-${n}" name="cargoExp-${n}" autocomplete="off" placeholder="Cargo exercido" class="cargoExp" oninput="atualizar()">
+        <label for="periodo-${n}">Período</label>
+        <input type="text" id="periodo-${n}" name="periodo-${n}" autocomplete="off" placeholder="Jan 2021 – Dez 2023" class="periodo" oninput="atualizar()">
+        <label for="descricao-${n}">Descrição</label>
+        <textarea id="descricao-${n}" name="descricao-${n}" autocomplete="off" placeholder="Principais atividades e conquistas..." class="descricao" oninput="enforcarQuebra(this); atualizar()"></textarea>
         <button class="btn-remove" onclick="this.parentElement.remove(); atualizar()">
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           Remover
@@ -664,17 +671,19 @@
       });
     }
 
+    let _formCount = 0;
     function adicionarFormacao() {
       const container = document.getElementById('formacoes');
       const div = document.createElement('div');
       div.className = 'box formacao';
+      const n = ++_formCount;
       div.innerHTML = `
-        <label>Instituição</label>
-        <input type="text" placeholder="Nome da instituição" class="instituicao" oninput="atualizar()">
-        <label>Curso</label>
-        <input type="text" placeholder="Nome do curso" class="curso" oninput="atualizar()">
-        <label>Período</label>
-        <input type="text" placeholder="2018 – 2022" class="periodoForm" oninput="atualizar()">
+        <label for="instituicao-${n}">Instituição</label>
+        <input type="text" id="instituicao-${n}" name="instituicao-${n}" autocomplete="organization" placeholder="Nome da instituição" class="instituicao" oninput="atualizar()">
+        <label for="curso-${n}">Curso</label>
+        <input type="text" id="curso-${n}" name="curso-${n}" autocomplete="off" placeholder="Nome do curso" class="curso" oninput="atualizar()">
+        <label for="periodoForm-${n}">Período</label>
+        <input type="text" id="periodoForm-${n}" name="periodoForm-${n}" autocomplete="off" placeholder="2018 – 2022" class="periodoForm" oninput="atualizar()">
         <button class="btn-remove" onclick="this.parentElement.remove(); atualizar()">
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           Remover
@@ -703,12 +712,15 @@
       });
     }
 
+    let _habCount = 0;
     function adicionarHabilidade() {
       const container = document.getElementById('habilidades');
       const div = document.createElement('div');
       div.className = 'box habilidade';
+      const n = ++_habCount;
       div.innerHTML = `
-        <input type="text" placeholder="Ex: Figma, React, Liderança..." class="hab" oninput="atualizar()">
+        <label for="hab-${n}">Habilidade</label>
+        <input type="text" id="hab-${n}" name="hab-${n}" autocomplete="off" placeholder="Ex: Figma, React, Liderança..." class="hab" oninput="atualizar()">
         <button class="btn-remove" onclick="this.parentElement.remove(); atualizar()">
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           Remover
@@ -790,6 +802,28 @@
 
       el.value = valorWrapped;
       el.selectionStart = el.selectionEnd = novoCursor;
+    }
+
+    function downloadPDF() {
+      const btn = document.getElementById('btnDownload');
+      btn.disabled = true;
+      btn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg> Gerando PDF...`;
+
+      const nome = document.getElementById('nome').value.trim() || 'curriculo';
+      const elemento = document.getElementById('curriculo');
+
+      const opt = {
+        margin:       0,
+        filename:     nome.toLowerCase().replace(/\s+/g, '-') + '.pdf',
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, useCORS: true, logging: false, letterRendering: true },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+
+      html2pdf().set(opt).from(elemento).save().then(() => {
+        btn.disabled = false;
+        btn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Baixar PDF`;
+      });
     }
 
     // Init defaults
