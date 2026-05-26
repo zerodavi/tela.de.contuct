@@ -464,16 +464,369 @@
       flex-shrink: 0;
     }
 
-    /* Print */
+    /* ══════════════════════════════════════════════════
+       PRINT / PDF — PRESERVAÇÃO VISUAL COMPLETA
+       ══════════════════════════════════════════════════ */
+
     @media print {
-      body { background: white; display: block; }
-      .painel { display: none; }
-      .main { padding: 0; }
-      .curriculo {
-        box-shadow: none;
-        width: 100%;
-        min-height: auto;
+
+      /* ── Configuração da página A4 ── */
+      @page {
+        size: A4 portrait;
+        margin: 0;
       }
+
+      /* ── Forçar impressão de cores em todos os elementos ── */
+      *,
+      *::before,
+      *::after {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        color-adjust: exact !important;
+      }
+
+      /* ── Reset do layout de tela ── */
+      html, body {
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        background: white !important;
+        display: block !important;
+        overflow: visible !important;
+      }
+
+      /* ── Ocultar painel lateral de edição ── */
+      .painel {
+        display: none !important;
+      }
+
+      /* ── Área principal: sem centralização, preenche tudo ── */
+      .main {
+        display: block !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        background: none !important;
+        width: 100% !important;
+        min-height: unset !important;
+        align-items: unset !important;
+        justify-content: unset !important;
+      }
+
+      /* ── Currículo: preenche toda a largura da página ── */
+      .curriculo {
+        box-shadow: none !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-height: 297mm !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border-radius: 0 !important;
+        overflow: visible !important;
+        display: flex !important;
+        flex-direction: column !important;
+        float: none !important;
+        position: static !important;
+        page-break-inside: avoid;
+      }
+
+      /* ══ 1. CABEÇALHO ESCURO + PSEUDO-ELEMENTOS DECORATIVOS ══ */
+      .cv-header {
+        background: #1a1a2e !important;
+        background-color: #1a1a2e !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        color-adjust: exact !important;
+        position: relative !important;
+        overflow: hidden !important;
+        padding: 36px 40px !important;
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        gap: 24px !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+      }
+
+      /* Círculos decorativos dourados do cabeçalho */
+      .cv-header::before {
+        content: '' !important;
+        position: absolute !important;
+        top: -40px !important;
+        right: 120px !important;
+        width: 200px !important;
+        height: 200px !important;
+        border-radius: 50% !important;
+        background: rgba(201,168,76,0.07) !important;
+        background-color: rgba(201,168,76,0.07) !important;
+        pointer-events: none !important;
+        display: block !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+
+      .cv-header::after {
+        content: '' !important;
+        position: absolute !important;
+        bottom: -60px !important;
+        left: 60px !important;
+        width: 140px !important;
+        height: 140px !important;
+        border-radius: 50% !important;
+        background: rgba(201,168,76,0.05) !important;
+        background-color: rgba(201,168,76,0.05) !important;
+        pointer-events: none !important;
+        display: block !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+
+      /* ── Nome no cabeçalho ── */
+      #cvNome {
+        font-family: 'Playfair Display', serif !important;
+        font-size: 32px !important;
+        font-weight: 700 !important;
+        color: #ffffff !important;
+        line-height: 1.1 !important;
+        letter-spacing: -0.5px !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+
+      /* ── Cargo ── */
+      #cvCargo {
+        color: #c9a84c !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+
+      /* ══ 2. ÍCONES SVG + LINHA DE CONTATO ══ */
+      .cv-contato-line {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        gap: 6px 20px !important;
+        margin-top: 14px !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+
+      .cv-contato-line span {
+        font-size: 12px !important;
+        color: rgba(255,255,255,0.75) !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 5px !important;
+        white-space: nowrap !important;
+        vertical-align: middle !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+
+      .cv-contato-line span svg {
+        display: inline-block !important;
+        width: 11px !important;
+        height: 11px !important;
+        min-width: 11px !important;
+        opacity: 0.85 !important;
+        flex-shrink: 0 !important;
+        vertical-align: middle !important;
+        overflow: visible !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+
+      /* ── Foto de perfil ── */
+      #cvFoto {
+        width: 110px !important;
+        height: 110px !important;
+        border-radius: 12px !important;
+        object-fit: cover !important;
+        border: 3px solid #c9a84c !important;
+        box-shadow: 0 0 0 4px rgba(201,168,76,0.2) !important;
+        position: relative !important;
+        z-index: 1 !important;
+        flex-shrink: 0 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+
+      /* ══ BODY DO CURRÍCULO ══ */
+      .cv-body {
+        display: grid !important;
+        grid-template-columns: 1fr 200px !important;
+        flex: 1 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+
+      .cv-main-col {
+        padding: 32px 36px !important;
+        border-right: 1px solid #e8e4dc !important;
+      }
+
+      .cv-side-col {
+        padding: 28px 24px !important;
+        background: #fafaf8 !important;
+        background-color: #fafaf8 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+
+      /* ══ 3. TÍTULOS DAS SEÇÕES + PSEUDO-ELEMENTOS ══ */
+      .secao {
+        margin-bottom: 24px !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+      }
+
+      .secao-titulo {
+        font-family: 'Playfair Display', serif !important;
+        font-size: 14px !important;
+        font-weight: 700 !important;
+        color: #1a1a2e !important;
+        letter-spacing: 0.5px !important;
+        text-transform: uppercase !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        margin-bottom: 14px !important;
+        page-break-after: avoid !important;
+        break-after: avoid !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+
+      /* Traço dourado antes do título */
+      .secao-titulo::before {
+        content: '' !important;
+        display: block !important;
+        width: 16px !important;
+        min-width: 16px !important;
+        height: 2px !important;
+        background: #c9a84c !important;
+        background-color: #c9a84c !important;
+        flex-shrink: 0 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+
+      /* Linha divisória após o título */
+      .secao-titulo::after {
+        content: '' !important;
+        display: block !important;
+        flex: 1 !important;
+        height: 1px !important;
+        background: #e8e4dc !important;
+        background-color: #e8e4dc !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+
+      /* ══ Itens de experiência e formação ══ */
+      .cv-item {
+        margin-bottom: 16px !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+      }
+
+      .cv-item h3 {
+        font-size: 14px !important;
+        font-weight: 600 !important;
+        color: #1a1a2e !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+
+      .cv-item .cv-meta {
+        font-size: 12px !important;
+        color: #8888aa !important;
+        margin-top: 2px !important;
+        display: flex !important;
+        gap: 8px !important;
+        align-items: center !important;
+        flex-wrap: wrap !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+
+      .cv-item .cv-meta strong {
+        color: #4a4a6a !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+
+      .cv-item .cv-meta .periodo-badge {
+        background: #f0ede7 !important;
+        background-color: #f0ede7 !important;
+        color: #4a4a6a !important;
+        font-size: 10px !important;
+        font-weight: 600 !important;
+        padding: 2px 8px !important;
+        border-radius: 20px !important;
+        letter-spacing: 0.3px !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+
+      /* ══ 4. HABILIDADES: MARCADORES DOURADOS ══ */
+      .side-secao {
+        margin-bottom: 20px !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+      }
+
+      .side-secao-titulo {
+        font-size: 9px !important;
+        font-weight: 700 !important;
+        letter-spacing: 1.8px !important;
+        text-transform: uppercase !important;
+        color: #c9a84c !important;
+        margin-bottom: 10px !important;
+        padding-bottom: 6px !important;
+        border-bottom: 1px solid #e8e4dc !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+
+      #cvHabilidades {
+        list-style: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+      }
+
+      #cvHabilidades li {
+        font-size: 12px !important;
+        color: #4a4a6a !important;
+        padding: 5px 0 !important;
+        border-bottom: 1px dashed #e8e4dc !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+
+      /* Bolinhas douradas das habilidades */
+      #cvHabilidades li::before {
+        content: '' !important;
+        display: inline-block !important;
+        width: 5px !important;
+        min-width: 5px !important;
+        height: 5px !important;
+        border-radius: 50% !important;
+        background: #c9a84c !important;
+        background-color: #c9a84c !important;
+        flex-shrink: 0 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+
+      /* ── Evitar quebras indesejadas ── */
+      .cv-header-info { page-break-inside: avoid; break-inside: avoid; }
+      .cv-contato-line { page-break-inside: avoid; break-inside: avoid; }
     }
 
     @media (max-width: 900px) {
@@ -545,7 +898,7 @@
       </button>
     </div>
 
-    <button class="btn-print" onclick="window.print()">
+    <button class="btn-print" onclick="document.fonts.ready.then(()=>window.print())">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
       Baixar / Imprimir PDF
     </button>
@@ -604,9 +957,9 @@
       const tel = document.getElementById('telefone').value;
       const end = document.getElementById('endereco').value;
 
-      const iconEmail = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>`;
-      const iconTel = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.6a16 16 0 0 0 6 6l.92-.86a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>`;
-      const iconEnd = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>`;
+      const iconEmail = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="2" style="display:inline-block;vertical-align:middle;flex-shrink:0"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>`;
+      const iconTel = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="2" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.6a16 16 0 0 0 6 6l.92-.86a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>`;
+      const iconEnd = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="2" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>`;
 
       let contato = '';
       if (email) contato += `<span>${iconEmail} ${email}</span>`;
